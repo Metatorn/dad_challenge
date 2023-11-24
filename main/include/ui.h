@@ -3,7 +3,7 @@
  * @author Diego Felipe Mejia (dmejia@dsd.dev)
  * @brief Queue initialization.
  * @version 0.1
- * @date 2022-11-24
+ * @date 2023-11-23
  * 
  * @copyright Copyright (c) 2023
  * 

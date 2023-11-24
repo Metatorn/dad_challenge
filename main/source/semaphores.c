@@ -3,7 +3,7 @@
  * @author Diego Felipe Mejia (dmejia@dsd.dev)
  * @brief Semaphores template.
  * @version 0.1
- * @date 2023-07-31
+ * @date 2023-11-23
  * 
  * @copyright Copyright (c) 2023
  * 

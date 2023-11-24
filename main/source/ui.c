@@ -3,7 +3,7 @@
  * @author Diego Felipe Mejia (dmejia@dsd.dev)
  * @brief Queue initialization.
  * @version 0.1
- * @date 2022-11-24
+ * @date 2023-11-23
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -112,19 +112,8 @@ void UI_Task(void* pvParameters){
                 s_green = 255; 
             } 
         }  
-        /*if (typeNotification == 0){
-            s_green =  s_green - (200/countColor);
-            s_red = s_red -(255/countColor); 
-            if (s_green < 0)
-            {
-                s_green = 200;
-            }     
-            
-            if (s_red < 0){
-                s_red = 255;                
-            }
-        }*/
-        ESP_ERROR_CHECK(led_strip_set_pixel(s_led_strip, 0, s_red, s_green, s_blue));
+        ESP_ERROR_CHECK(led_strip_set_pixel(s_led_strip, msg_color.coord
+        , s_red, s_green, s_blue));
         ESP_ERROR_CHECK(led_strip_refresh(s_led_strip)); 
         if(xQueueReceive(Q_commands, &msg_color , pdMS_TO_TICKS(1) ) == pdTRUE){
             ESP_LOGW(TAG, "LED message received: %d, %d, %ld, %d, %d", msg_color.color, msg_color.enable, msg_color.time, msg_color.count, msg_color.coord);

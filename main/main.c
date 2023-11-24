@@ -15,6 +15,7 @@
  */
 #include "common.h"
 #include "ui.h"
+#include "serial.h"
 #include "nvs_flash.h"
 #include "nvs.h"
 
@@ -26,5 +27,6 @@ void app_main(void)
     /* hardware related and device init */
     Queues_init();
     UI_Init(); 
+    Serial_Init();
     
 }
