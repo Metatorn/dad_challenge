@@ -89,7 +89,7 @@ typedef struct
     uint32_t time;
     uint8_t count;
     uint8_t coord;
-}comand_color;
+}command_color;
 
 /**
  * @brief  frecuency  enum to set atm90

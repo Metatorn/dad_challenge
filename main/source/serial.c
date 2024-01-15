@@ -26,7 +26,7 @@
 #include "driver/gpio.h"
 #include "common.h"
 
-extern QueueHandle_t Q_Command;
+extern QueueHandle_t Q_commands;
 
 static const char *TASK_SERIAL = "SERIAL";
 /**
@@ -36,37 +36,57 @@ static const char *TASK_SERIAL = "SERIAL";
  */
 void serialProtocol(){
     ESP_LOGI(TASK_SERIAL, "task_serial Started");
-    int index = 0;
-    const char delimiters[6] = {' ','[',']','\r','\n'};
+    const char delimiters[5] = {'[',']','\r','\n'};
+    const char command[] = {"BLINK"};
     uint8_t* data = (uint8_t*) malloc(BUF_SIZE+1);
     uint8_t endString = pdFALSE;
     char* token = 0;
     char* pointer = 0;
+    int index = 0;
+    uint8_t row, column, period;
+    command_color parameter;
 
     while (1) {
         
         if(endString==pdFALSE){
-            int rxBytes = uart_read_bytes(PORT_UART, data+index, BUF_SIZE, 100 / portTICK_RATE_MS);
+            int rxBytes = uart_read_bytes(PORT_UART, data, BUF_SIZE, 100 / portTICK_RATE_MS);
             if(rxBytes>0){
-                index += rxBytes;
-                uart_write_bytes(PORT_UART, (const char*)data, index);
-                pointer= strchr((const char*)data,'\n');
-                /*if(*pointer == '\n'){
-                    ESP_LOGI(TASK_SERIAL, "command received");
-                    endString = pdTRUE;
-                }*/
+                data[rxBytes] = 0;
+                uart_write_bytes(PORT_UART, (const char*)data, strlen((char*)data)); //echo
+                for(index=0;index<BUF_SIZE;index++){
+                    if( (data[index]=='\n') || (data[index]=='\r')){
+                        endString = pdTRUE;
+                        break;
+                    }
+                }
             }
-            
         }
         else{
-            token = strtok((char*)data,delimiters);
-            if(!strcmp(token,"BLINK")){
-                token =strtok(NULL,delimiters);
-
-                ESP_LOGI(TASK_SERIAL, "OK");
+            //ESP_LOGI(TASK_SERIAL, "VALID STRING RECEIVED");
+            pointer = strstr((char*)data, command); //find command in string entered
+            if(pointer != NULL){
+                //command found
+                token = strtok((char*)data,delimiters);
+                if(!strcmp(token,"BLINK ")){ //revalidation of command
+                    token =strtok(NULL,delimiters); // find ] first row   
+                    row = atoi(token);
+                    token =strtok(NULL,delimiters); // find ] and column   
+                    column = atoi(token);
+                    token =strtok(NULL,delimiters); // find period
+                    period = atoi(token);
+                    parameter.coord = column+(row*4);
+                    parameter.time = period;
+                    parameter.enable = pdTRUE;
+                    //ESP_LOGI(TASK_SERIAL, "Row %d Column %d Period %d", row, column, period);
+                    xQueueSend(Q_commands, (void*)&parameter, pdMS_TO_TICKS(10));
+                    ESP_LOGI(TASK_SERIAL, "OK");
+                }
+                else{
+                    ESP_LOGI(TASK_SERIAL, "ERROR");
+                }
             }
             else{
-                ESP_LOGI(TASK_SERIAL, "ERROR");
+                ESP_LOGI(TASK_SERIAL, "BAD COMMAND");
             }
             endString = pdFALSE;
         }

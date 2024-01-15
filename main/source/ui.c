@@ -35,31 +35,6 @@ uint8_t countColor=0;
 bool isRed, isGreen, isBlue, isYellow;
 
 /**
- * @brief UI set color 
- * 
- * @param arg 
- */
-void UI_Set_Colour(uint8_t _color, bool enable, uint32_t _time, uint8_t _count){
-   
-    switch (_color){
-        case red:
-        s_red = 255;
-        isRed = enable;
-        break;
-    case green:
-        s_green = 255;      
-        isGreen = enable;
-        break;
-    case blue:
-        s_blue = 255;
-        isBlue = enable;
-        break;   
-    }
-    tempColor = _time;
-    countColor = _count;
-}
-
-/**
  * @brief Light Driver Init
  */
 void light_driver_init()
@@ -80,46 +55,34 @@ void light_driver_init()
  * @param pvParameters
  */
 void UI_Task(void* pvParameters){ 
-    comand_color msg_color;
+    command_color msg_color;
     ESP_LOGI("UI TASK", "UI task Started");
     light_driver_init();
-    msg_color.color = red;
-    msg_color.coord = 3;
-    msg_color.enable = 1;
-    msg_color.time = 200;
-    msg_color.count = 10;
-    xQueueSend(Q_commands, &msg_color , pdMS_TO_TICKS(1));
+    int index = 0;
+    uint8_t matrix[4][16]; //matrix [enable][period]
     while(1){
-        if (isRed)
-        { 
-            s_red -= (255/countColor);
-            if (s_red < 0){
-                s_red = 255;
-            }             
-        }
-        if (isBlue)
-        {
-            s_blue -= (255/countColor);
-            if (s_blue < 0){
-                s_blue = 255; 
-            }            
-        
-        }
-        if (isGreen)
-        {
-            s_green =  s_green - (255/countColor);            
-            if (s_green < 0){
-                s_green = 255; 
-            } 
-        }  
-        ESP_ERROR_CHECK(led_strip_set_pixel(s_led_strip, msg_color.coord
-        , s_red, s_green, s_blue));
-        ESP_ERROR_CHECK(led_strip_refresh(s_led_strip)); 
         if(xQueueReceive(Q_commands, &msg_color , pdMS_TO_TICKS(1) ) == pdTRUE){
+            msg_color.color = red;
             ESP_LOGW(TAG, "LED message received: %d, %d, %ld, %d, %d", msg_color.color, msg_color.enable, msg_color.time, msg_color.count, msg_color.coord);
-            UI_Set_Colour(msg_color.color, msg_color.enable, msg_color.time, msg_color.count); 
+            matrix[0][msg_color.coord]=msg_color.enable;
+            matrix[1][msg_color.coord]=msg_color.time;
+            matrix[2][msg_color.coord]= 0; //Counter blink
+            matrix[3][msg_color.coord]= 1; //Temporal blink status
         }
-
+        for(index=0;index<16;index++){
+            if(matrix[2][index]){ //is enabled?
+                matrix[2][index]++; //increase counter
+                if(matrix[2][index]>matrix[1][index]){ //counter LED > LED period?
+                    matrix[2][index]=0;
+                    matrix[3][index]=~matrix[3][index]; //switch status if enabled
+                }
+            }
+            else{
+                matrix[3][index]=0;
+            }
+            ESP_ERROR_CHECK(led_strip_set_pixel(s_led_strip, index, 255*matrix[3][index], 0, 0));
+            ESP_ERROR_CHECK(led_strip_refresh(s_led_strip)); 
+        }
         vTaskDelay(pdMS_TO_TICKS(tempColor));
     }
 

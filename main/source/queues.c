@@ -39,6 +39,6 @@ QueueHandle_t Q_commands;
  */
 void Queues_init()
 {
-    Q_commands = xQueueCreate( 2, sizeof( comand_color) );
+    Q_commands = xQueueCreate( 2, sizeof( command_color) );
     if(Q_commands == NULL) ESP_LOGE("QUEUES", "Error creating commands queue");
 }
