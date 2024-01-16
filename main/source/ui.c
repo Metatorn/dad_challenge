@@ -70,7 +70,7 @@ void UI_Task(void* pvParameters){
             matrix[3][msg_color.coord]= 1; //Temporal blink status
         }
         for(index=0;index<16;index++){
-            if(matrix[2][index]){ //is enabled?
+            if(matrix[0][index]){ //is enabled?
                 matrix[2][index]++; //increase counter
                 if(matrix[2][index]>matrix[1][index]){ //counter LED > LED period?
                     matrix[2][index]=0;
@@ -83,7 +83,7 @@ void UI_Task(void* pvParameters){
             ESP_ERROR_CHECK(led_strip_set_pixel(s_led_strip, index, 255*matrix[3][index], 0, 0));
             ESP_ERROR_CHECK(led_strip_refresh(s_led_strip)); 
         }
-        vTaskDelay(pdMS_TO_TICKS(tempColor));
+        vTaskDelay(pdMS_TO_TICKS(1));
     }
 
 }
